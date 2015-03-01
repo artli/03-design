@@ -5,9 +5,12 @@ using System.Linq;
 using System.Threading;
 using NLog;
 
-namespace battleships
-{
-	public class ProcessMonitor
+namespace battleships {
+    public interface IProcessMonitor {
+        void Register(System.Diagnostics.Process process);
+    }
+
+	public class ProcessMonitor : IProcessMonitor
 	{
 		private static readonly Logger log = LogManager.GetCurrentClassLogger();
 		private readonly object locker = new object();
@@ -15,10 +18,10 @@ namespace battleships
 		private readonly List<Process> processes = new List<Process>();
 		private readonly TimeSpan timeLimit;
 
-		public ProcessMonitor(TimeSpan timeLimit, long memoryLimit)
+		public ProcessMonitor(Settings settings)
 		{
-			this.timeLimit = timeLimit;
-			this.memoryLimit = memoryLimit;
+			this.timeLimit = TimeSpan.FromSeconds(settings.TimeLimitSeconds * settings.GamesCount);
+			this.memoryLimit = settings.MemoryLimit;
 			CreateMonitoringThread().Start();
 		}
 

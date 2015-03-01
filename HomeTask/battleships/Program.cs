@@ -3,6 +3,10 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Threading;
+using Ninject;
+using Ninject.Extensions.Factory;
+using Ninject.Extensions.Conventions;
+
 
 namespace battleships
 {
@@ -17,8 +21,17 @@ namespace battleships
 				return;
 			}
 			var aiPath = args[0];
-			var settings = new Settings("settings.txt");
-			var tester = new AiTester(settings);
+
+            var kernel = new StandardKernel();
+            kernel.Bind(x => x
+                .FromThisAssembly()
+                .SelectAllClasses()
+                .BindAllInterfaces());
+            kernel.Bind<Settings>().ToSelf().WithConstructorArgument("settings.txt");
+            kernel.Bind<IAiFactory>().ToFactory();
+            kernel.Bind<IGameFactory>().ToFactory();
+            var tester = kernel.Get<AiTester>();
+
 			if (File.Exists(aiPath))
 				tester.TestSingleFile(aiPath);
 			else

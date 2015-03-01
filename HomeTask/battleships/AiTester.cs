@@ -3,40 +3,54 @@ using System.Collections.Generic;
 using System.Linq;
 using NLog;
 
-namespace battleships
-{
+namespace battleships {
+    public interface IAiFactory {
+        IAi Create(string exePath, IProcessMonitor monitor);
+    }
+
+    public interface IGameFactory {
+        IGame Create(Map map, IAi ai);
+    }
+
 	public class AiTester
 	{
 		private static readonly Logger resultsLog = LogManager.GetLogger("results");
 		private readonly Settings settings;
+        private readonly IMapGenerator mapGenerator;
+        private readonly IGameVisualizer gameVisualizer;
+        private readonly IProcessMonitor monitor;
+        private readonly IAiFactory aiFactory;
+        private readonly IGameFactory gameFactory;
 
-		public AiTester(Settings settings)
+        public AiTester(Settings settings, IMapGenerator mapGenerator, IGameVisualizer gameVisualizer, IProcessMonitor monitor, IAiFactory aiFactory, IGameFactory gameFactory)
 		{
 			this.settings = settings;
+            this.mapGenerator = mapGenerator;
+            this.gameVisualizer = gameVisualizer;
+            this.monitor = monitor;
+            this.aiFactory = aiFactory;
+            this.gameFactory = gameFactory;
 		}
 
 		public void TestSingleFile(string exe)
 		{
-			var gen = new MapGenerator(settings, new Random(settings.RandomSeed));
-			var vis = new GameVisualizer();
-			var monitor = new ProcessMonitor(TimeSpan.FromSeconds(settings.TimeLimitSeconds * settings.GamesCount), settings.MemoryLimit);
 			var badShots = 0;
 			var crashes = 0;
 			var gamesPlayed = 0;
 			var shots = new List<int>();
-			var ai = new Ai(exe, monitor);
+			var ai = aiFactory.Create(exe, monitor);
 			for (var gameIndex = 0; gameIndex < settings.GamesCount; gameIndex++)
 			{
-				var map = gen.GenerateMap();
-				var game = new Game(map, ai);
-				RunGameToEnd(game, vis);
+				var map = mapGenerator.GenerateMap();
+				var game = gameFactory.Create(map, ai);
+				RunGameToEnd(game);
 				gamesPlayed++;
 				badShots += game.BadShots;
 				if (game.AiCrashed)
 				{
 					crashes++;
 					if (crashes > settings.CrashLimit) break;
-					ai = new Ai(exe, monitor);
+                    ai = aiFactory.Create(exe, monitor);
 				}
 				else
 					shots.Add(game.TurnsCount);
@@ -51,14 +65,14 @@ namespace battleships
 			WriteTotal(ai, shots, crashes, badShots, gamesPlayed);
 		}
 
-		private void RunGameToEnd(Game game, GameVisualizer vis)
+		private void RunGameToEnd(IGame game)
 		{
 			while (!game.IsOver())
 			{
 				game.MakeStep();
 				if (settings.Interactive)
 				{
-					vis.Visualize(game);
+					gameVisualizer.Visualize(game);
 					if (game.AiCrashed)
 						Console.WriteLine(game.LastError.Message);
 					Console.ReadKey();
@@ -66,7 +80,7 @@ namespace battleships
 			}
 		}
 
-		private void WriteTotal(Ai ai, List<int> shots, int crashes, int badShots, int gamesPlayed)
+		private void WriteTotal(IAi ai, List<int> shots, int crashes, int badShots, int gamesPlayed)
 		{
 			if (shots.Count == 0) shots.Add(1000 * 1000);
 			shots.Sort();

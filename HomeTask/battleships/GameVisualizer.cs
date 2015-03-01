@@ -3,9 +3,13 @@ using System.Text;
 
 namespace battleships
 {
-	public class GameVisualizer
+    public interface IGameVisualizer {
+        void Visualize(IGame game);
+    }
+
+	public class GameVisualizer : IGameVisualizer
 	{
-		public void Visualize(Game game)
+		public void Visualize(IGame game)
 		{
 			Console.Clear();
 			Console.WriteLine(MapToString(game));
@@ -17,7 +21,7 @@ namespace battleships
 				Console.WriteLine("Game is over");
 		}
 
-		private string MapToString(Game game)
+		private string MapToString(IGame game)
 		{
 			var map = game.Map;
 			var sb = new StringBuilder();

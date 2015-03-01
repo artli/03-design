@@ -4,15 +4,19 @@ using NUnit.Framework;
 
 namespace battleships
 {
-	public class MapGenerator
+    public interface IMapGenerator {
+        Map GenerateMap();
+    }
+
+	public class MapGenerator : IMapGenerator
 	{
 		private readonly Settings settings;
 		private readonly Random random;
 
-		public MapGenerator(Settings settings, Random random)
+		public MapGenerator(Settings settings)
 		{
 			this.settings = settings;
-			this.random = random;
+            this.random = new Random(settings.RandomSeed);
 		}
 
 		public Map GenerateMap()
@@ -42,7 +46,7 @@ namespace battleships
 		public void always_succeed_on_standard_map()
 		{
 			var settings = new Settings { Width = 10, Height = 10, Ships = new[] { 1, 1, 1, 1, 2, 2, 2, 3, 3, 4 } };
-			var gen = new MapGenerator(settings, new Random());
+			var gen = new MapGenerator(settings);
 			for (var i = 0; i < 10000; i++)
 				gen.GenerateMap();
 		}
