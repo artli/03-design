@@ -24,7 +24,8 @@ namespace battleships
 			var crashes = 0;
 			var gamesPlayed = 0;
 			var shots = new List<int>();
-			var ai = new Ai(exe, monitor);
+            var ai = new Ai(exe);
+            ai.ProcessStarted += monitor.Register;
 			for (var gameIndex = 0; gameIndex < settings.GamesCount; gameIndex++)
 			{
 				var map = gen.GenerateMap();
@@ -36,7 +37,8 @@ namespace battleships
 				{
 					crashes++;
 					if (crashes > settings.CrashLimit) break;
-					ai = new Ai(exe, monitor);
+                    ai = new Ai(exe);
+                    ai.ProcessStarted += monitor.Register;
 				}
 				else
 					shots.Add(game.TurnsCount);
