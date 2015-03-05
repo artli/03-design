@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -18,9 +20,8 @@ namespace battleships
 			}
 			var aiPath = args[0];
 			var settings = new Settings("settings.txt");
-			var tester = new AiTester(settings);
 			if (File.Exists(aiPath))
-				tester.TestSingleFile(aiPath);
+                AiTester.TestSingleFile(settings, aiPath);
 			else
 				Console.WriteLine("No AI exe-file " + aiPath);
 		}

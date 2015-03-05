@@ -18,7 +18,7 @@ namespace battleships
 		}
 
         public delegate void ProcessStartedHandler(Process process);
-        public event ProcessStartedHandler ProcessStarted;
+        public event ProcessStartedHandler ProcessStarted = delegate { };
 
 		public string Name
 		{
